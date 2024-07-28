@@ -357,6 +357,92 @@
     let countries;
     let countryColors = {};
     let selectedCountry = null;
+    // Function to get country code for flag
+    function getCountryCode(countryName) {
+        const countryCodeMap = {
+            "United States": "us",
+            "United Kingdom": "gb",
+            "DR Congo": "cd",
+            "South Korea": "kr",
+            "North Korea": "kp",
+            "Côte d'Ivoire": "ci",
+            "Czech Republic (Czechia)": "cz",
+            "United Arab Emirates": "ae",
+            "Papua New Guinea": "pg",
+            "Hong Kong": "hk",
+            "El Salvador": "sv",
+            "New Zealand": "nz",
+            "Bosnia and Herzegovina": "ba",
+            "Puerto Rico": "pr",
+            "North Macedonia": "mk",
+            "Guinea-Bissau": "gw",
+            "Trinidad and Tobago": "tt",
+            "Timor-Leste": "tl",
+            "Réunion": "re",
+            "Western Sahara": "eh",
+            "Cabo Verde": "cv",
+            "French Guiana": "gf",
+            "New Caledonia": "nc",
+            "French Polynesia": "pf",
+            "Sao Tome & Principe": "st",
+            "Saint Lucia": "lc",
+            "Channel Islands": "je",
+            "St. Vincent & Grenadines": "vc",
+            "U.S. Virgin Islands": "vi",
+            "Antigua and Barbuda": "ag",
+            "Isle of Man": "im",
+            "Cayman Islands": "ky",
+            "Northern Mariana Islands": "mp",
+            "Saint Kitts & Nevis": "kn",
+            "Faeroe Islands": "fo",
+            "Sint Maarten": "sx",
+            "Turks and Caicos": "tc",
+            "Saint Martin": "mf",
+            "British Virgin Islands": "vg",
+            "Caribbean Netherlands": "bq",
+            "Wallis & Futuna": "wf",
+            "Saint Barthelemy": "bl",
+            "Saint Helena": "sh",
+            "Saint Pierre & Miquelon": "pm",
+            "Falkland Islands": "fk",
+            "Holy See": "va"
+        };
+        return countryCodeMap[countryName] || countryName.toLowerCase().replace(/\s+/g, '-');
+    }
+
+    d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+        .then(data => {
+            countries = topojson.feature(data, data.objects.countries);
+
+            // Assign a stable color to each country
+            countries.features.forEach(feature => {
+                const population = populationData[feature.properties.name] || 0;
+                countryColors[feature.properties.name] = colorScale(population);
+            });
+
+            function render() {
+                context.clearRect(0, 0, width, height);
+
+                context.beginPath();
+                path({type: 'Sphere'});
+                context.fillStyle = '#4B5358';
+                context.fill();
+
+                countries.features.forEach(feature => {
+                    context.beginPath();
+                    path(feature);
+                    if (selectedCountry === feature.properties.name) {
+                        context.fillStyle = '#00FF00';  // Green for selected country
+                    } else {
+                        context.fillStyle = countryColors[feature.properties.name];
+                    }
+                    context.fill();
+                    context.strokeStyle = '#2B3034';
+                    context.lineWidth = 0.5;
+                    context.stroke();
+                });
+            }
+        });
     </script>
     </body>
     </html>
