@@ -442,7 +442,86 @@
                     context.stroke();
                 });
             }
+            function findCountry(x, y) {
+                const pos = projection.invert([x, y]);
+                return countries.features.find(f => d3.geoContains(f, pos));
+            }
+
+            render();
+
+            canvas.on('mousemove', function(event) {
+                const [x, y] = d3.pointer(event, this);
+                const country = findCountry(x, y);
+                
+                if (country) {
+                    let countryName = country.properties.name;
+                    // Special handling for USA
+                    if (countryName === "United States of America") {
+                        countryName = "United States";
+                    }
+                    const population = populationData[countryName] || 'Data not available';
+                    tooltip
+                        .style('display', 'block')
+                        .style('left', `${x + 10}px`)
+                        .style('top', `${y + 10}px`)
+                        .html(`<strong>${countryName}</strong><br>Population: ${typeof population === 'number' ? population.toLocaleString() : population}<br>Click to select`);
+                    
+                    const countryCode = getCountryCode(countryName);
+                    flagDisplay.style('display', 'block');
+                    flagImg
+                        .attr('src', `https://flagcdn.com/w160/${countryCode}.png`)
+                        .attr('alt', `${countryName} flag`)
+                        .on('error', function() {
+                            d3.select(this)
+                                .attr('src', 'https://via.placeholder.com/160x100.png?text=Flag+Not+Available');
+                        });
+                } else {
+                    tooltip.style('display', 'none');
+                    flagDisplay.style('display', 'none');
+                }
+            });
+
+            canvas.on('click', function(event) {
+                const [x, y] = d3.pointer(event, this);
+                const country = findCountry(x, y);
+                
+                if (country) {
+                    let countryName = country.properties.name;
+                    // Special handling for USA
+                    if (countryName === "United States of America") {
+                        countryName = "United States";
+                    }
+                    selectedCountry = countryName;
+                    const population = populationData[countryName] || 'Data not available';
+                    populationDisplay.html(`<strong>${countryName}</strong><br>Population: ${typeof population === 'number' ? population.toLocaleString() : population}`);
+                    render();
+                }
+            });
+
+            // Keyboard controls
+            document.addEventListener('keydown', (event) => {
+                const rotation = projection.rotate();
+                const speed = 5; // Adjust rotation speed
+
+                switch(event.key) {
+                    case 'ArrowLeft':
+                        rotation[0] += speed;
+                        break;
+                    case 'ArrowRight':
+                        rotation[0] -= speed;
+                        break;
+                    case 'ArrowUp':
+                        rotation[1] = Math.max(rotation[1] - speed, -90);
+                        break;
+                    case 'ArrowDown':
+                        rotation[1] = Math.min(rotation[1] + speed, 90);
+                        break;
+                }
+
+                projection.rotate(rotation);
+                render();
+            });
         });
-    </script>
-    </body>
-    </html>
+</script>
+</body>
+</html>
